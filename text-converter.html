@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ココフォリア用テキストコンバーター</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;padding:20px;max-width:800px;margin:auto}
+.container{border:1px solid #ddd;padding:20px;border-radius:5px}
+.description-toggle{cursor:pointer;color:#007bff;text-decoration:underline}
+.description-content{display:none;margin-top:10px;padding:10px;background-color:#f8f9fa;border-radius:5px}
+.text-areas{display:flex;justify-content:space-between;margin-top:20px}
+.text-area{width:48%}
+textarea{width:100%;height:200px;margin-bottom:10px}
+button{background-color:#007bff;color:white;border:none;padding:5px 10px;cursor:pointer;margin-right:5px}
+#message{margin-top:10px;color:green}
+.options{margin-top:20px}
+.checkbox-group{margin-bottom:10px}
+.rule-section{margin-bottom:20px}
+.rule-form{display:flex;margin-bottom:10px}
+.rule-form input{margin-right:5px}
+.rule-list{margin-top:10px}
+.rule-item{display:flex;align-items:center;margin-bottom:5px}
+.rule-item input, .rule-item select{margin-right:5px}
+.delete-btn{margin-left:5px}
+.arrow{margin:0 5px;font-weight:bold}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>ココフォリア用テキストコンバーター</h1>
+<div class="description-toggle" onclick="toggleDescription()">説明を表示/非表示</div>
+<div id="description" class="description-content">
+<p>このツールは、ココフォリアで使用するテキストを効率的に整形するためのコンバーターです。小説やシナリオのテキストを、ココフォリアの「テキスト」タブで使いやすい形式に変換します。主な機能は以下の通りです：</p>
+<ul>
+<li>空白と改行の削除：テキストを詰めて表示します。行頭の空白や空の行も削除します。</li>
+<li>指定文字での改行：「、」「。」「」」などで自動的に改行を入れます。</li>
+<li>カスタム改行ルール：任意の文字で改行を入れられます。</li>
+<li>文字列の置換：特定の文字列を別の文字列に置き換えます。</li>
+<li>不要な文字列の削除：ヘッダーやフッターなど、不要な部分を削除します。</li>
+</ul>
+<p>使い方：変換したいテキストを入力し、必要なオプションを選択して「変換」ボタンをクリックしてください。結果は自動的にクリップボードにコピーされます。</p>
+</div>
+<div class="text-areas">
+<div class="text-area">
+<h2>変換前</h2>
+<textarea id="inputText"></textarea>
+</div>
+<div class="text-area">
+<h2>変換後</h2>
+<textarea id="outputText" readonly></textarea>
+</div>
+</div>
+<div>
+<button onclick="convertText()">変換</button>
+<button onclick="copyAll()">全てコピー</button>
+</div>
+<div id="message"></div>
+<div class="options">
+<div class="checkbox-group">
+<label><input type="checkbox" id="removeSpaces" checked>空白と改行を削除</label>
+<label><input type="checkbox" id="breakAtComma">、で改行</label>
+<label><input type="checkbox" id="breakAtPeriod">。で改行</label>
+<label><input type="checkbox" id="breakAtQuote">」で改行</label>
+</div>
+<div class="rule-section">
+<h3>改行ルール</h3>
+<div class="rule-form">
+<input type="text" id="breakRuleInput" placeholder="改行する文字">
+<select id="breakRulePosition">
+<option value="after">後</option>
+<option value="before">前</option>
+</select>
+<button onclick="addRule('break')">追加</button>
+</div>
+<div id="breakRules" class="rule-list"></div>
+</div>
+<div class="rule-section">
+<h3>置換ルール</h3>
+<div class="rule-form">
+<input type="text" id="replaceFrom" placeholder="置換前">
+<input type="text" id="replaceTo" placeholder="置換後">
+<button onclick="addRule('replace')">追加</button>
+</div>
+<div id="replaceRules" class="rule-list"></div>
+</div>
+<div class="rule-section">
+<h3>削除ルール</h3>
+<div class="rule-form">
+<input type="text" id="deleteRuleInput" placeholder="削除する文字列">
+<button onclick="addRule('delete')">追加</button>
+</div>
+<div id="deleteRules" class="rule-list"></div>
+</div>
+</div>
+</div>
+<script>
+let breakRules=[],replaceRules=[],deleteRules=[];function toggleDescription(){const e=document.getElementById("description");"none"===e.style.display?e.style.display="block":e.style.display="none"}function addRule(e){let t,l,n;switch(e){case"break":t=document.getElementById("breakRuleInput").value,l=document.getElementById("breakRulePosition").value,t&&breakRules.push({char:t,position:l}),n="breakRules";break;case"replace":t=document.getElementById("replaceFrom").value,l=document.getElementById("replaceTo").value,t&&l&&replaceRules.push({from:t,to:l}),n="replaceRules";break;case"delete":t=document.getElementById("deleteRuleInput").value,t&&deleteRules.push(t),n="deleteRules"}updateRuleList(e,n)}function updateRuleList(e,t){const l=document.getElementById(t);let n="";switch(e){case"break":n=breakRules.map(((e,t)=>`<div class="rule-item"><input type="text" value="${e.char}" onchange="updateRule('break', ${t}, 'char', this.value)"><select onchange="updateRule('break', ${t}, 'position', this.value)"><option value="after" ${e.position==="after"?"selected":""}>後</option><option value="before" ${e.position==="before"?"selected":""}>前</option></select><button class="delete-btn" onclick="removeRule('break', ${t})">削除</button></div>`)).join("");break;case"replace":n=replaceRules.map(((e,t)=>`<div class="rule-item"><input type="text" value="${e.from}" onchange="updateRule('replace', ${t}, 'from', this.value)"><span class="arrow">→</span><input type="text" value="${e.to}" onchange="updateRule('replace', ${t}, 'to', this.value)"><button class="delete-btn" onclick="removeRule('replace', ${t})">削除</button></div>`)).join("");break;case"delete":n=deleteRules.map(((e,t)=>`<div class="rule-item"><input type="text" value="${e}" onchange="updateRule('delete', ${t}, 'value', this.value)"><button class="delete-btn" onclick="removeRule('delete', ${t})">削除</button></div>`)).join("")}l.innerHTML=n}function removeRule(e,t){switch(e){case"break":breakRules.splice(t,1);break;case"replace":replaceRules.splice(t,1);break;case"delete":deleteRules.splice(t,1)}updateRuleList(e,e+"Rules")}function updateRule(e,t,l,n){switch(e){case"break":"char"===l?breakRules[t].char=n:breakRules[t].position=n;break;case"replace":replaceRules[t][l]=n;break;case"delete":deleteRules[t]=n}updateRuleList(e,e+"Rules")}function convertText(){let e=document.getElementById("inputText").value;const t=document.getElementById("removeSpaces").checked,l=document.getElementById("breakAtComma").checked,n=document.getElementById("breakAtPeriod").checked,a=document.getElementById("breakAtQuote").checked;if(t){e=e.replace(/^\s+|\s+$/gm,"");e=e.split("\n").filter(line=>line.trim()!=="").join("\n");e=e.replace(/\s+/g,"")}l&&(e=e.replace(/、/g,"、\n")),n&&(e=e.replace(/。/g,"。\n")),a&&(e=e.replace(/」/g,"」\n")),breakRules.forEach((t=>{"after"===t.position?e=e.replace(new RegExp(`${t.char}`,"g"),`${t.char}\n`):e=e.replace(new RegExp(`${t.char}`,"g"),`\n${t.char}`)})),replaceRules.forEach((t=>{e=e.replace(new RegExp(t.from,"g"),t.to)})),deleteRules.forEach((t=>{e=e.replace(new RegExp(t,"g"),"")})),document.getElementById("outputText").value=e,copyToClipboard(e)}function copyToClipboard(e){const t=document.createElement("textarea");t.value=e,document.body.appendChild(t),t.select(),document.execCommand("copy"),document.body.removeChild(t),showMessage("テキストがクリップボードにコピーされました")}function copyAll(){const e=document.getElementById("outputText").value;copyToClipboard(e)}function showMessage(e){const t=document.getElementById("message");t.textContent=e,setTimeout((()=>{t.textContent=""}),3e3)}
+</script>
+</body>
+</html>
