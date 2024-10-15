@@ -5,114 +5,686 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ココフォリア用テキストコンバーター</title>
 <style>
-body{font-family:Arial,sans-serif;margin:0;padding:20px;max-width:800px;margin:auto}
-.container{border:1px solid #ddd;padding:20px;border-radius:5px}
-.description-toggle{cursor:pointer;color:#007bff;text-decoration:underline}
-.description-content{display:none;margin-top:10px;padding:10px;background-color:#f8f9fa;border-radius:5px}
-.text-areas{display:flex;justify-content:space-between;margin-top:20px}
-.text-area{width:48%}
-textarea{width:100%;height:200px;margin-bottom:10px}
-button{background-color:#007bff;color:white;border:none;padding:5px 10px;cursor:pointer;margin-right:5px}
-#message{margin-top:10px;color:green}
-.options{margin-top:20px}
-.checkbox-group{margin-bottom:10px}
-.rule-section{margin-bottom:20px}
-.rule-form{display:flex;margin-bottom:10px}
-.rule-form input{margin-right:5px}
-.rule-list{margin-top:10px}
-.rule-item{display:flex;align-items:center;margin-bottom:5px}
-.rule-item input, .rule-item select{margin-right:5px}
-.delete-btn{margin-left:5px}
-.arrow{margin:0 5px;font-weight:bold}
-.footer{margin-top:30px;padding-top:20px;border-top:1px solid #ddd}
-.update-history, .author-info{margin-bottom:15px}
-.update-history summary, .author-info summary{cursor:pointer;color:#007bff}
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+}
+.container {
+  border: 1px solid #ddd;
+  padding: 20px;
+  border-radius: 5px;
+}
+.description-toggle {
+  cursor: pointer;
+  color: #007bff;
+  text-decoration: underline;
+}
+.description-content {
+  display: none;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+}
+.text-areas {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+.text-area {
+  width: 48%;
+}
+textarea {
+  width: 100%;
+  height: 200px;
+  margin-bottom: 10px;
+}
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  margin-right: 5px;
+}
+#message {
+  margin-top: 10px;
+  color: green;
+}
+.options {
+  margin-top: 20px;
+}
+.checkbox-group {
+  margin-bottom: 10px;
+}
+.rule-section {
+  margin-bottom: 20px;
+}
+.rule-form {
+  display: flex;
+  margin-bottom: 10px;
+}
+.rule-form input {
+  margin-right: 5px;
+}
+.rule-list {
+  margin-top: 10px;
+}
+.rule-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  background-color: #f8f9fa;
+  padding: 5px;
+  border-radius: 3px;
+  cursor: move;
+}
+.rule-item input, .rule-item select {
+  margin-right: 5px;
+}
+.delete-btn, .move-btn {
+  margin-left: 5px;
+  cursor: pointer;
+  user-select: none;
+}
+.move-btn {
+  font-size: 18px;
+}
+.arrow {
+  margin: 0 5px;
+  font-weight: bold;
+}
+.footer {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+}
+.update-history, .author-info {
+  margin-bottom: 15px;
+}
+.update-history summary, .author-info summary {
+  cursor: pointer;
+  color: #007bff;
+}
+.import-export {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+}
+.line-break-settings {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.line-break-settings label {
+  margin-right: 10px;
+}
+.line-break-settings input[type="number"] {
+  width: 50px;
+}
+.dragging {
+  opacity: 0.5;
+}
 </style>
 </head>
 <body>
 <div class="container">
-<h1>ココフォリア用テキストコンバーター</h1>
-<div class="description-toggle" onclick="toggleDescription()">説明を表示/非表示</div>
-<div id="description" class="description-content">
-<p>このツールは、ココフォリアで使用するテキストを効率的に整形するためのコンバーターです。テキストをココフォリアの「テキスト」タブで使いやすい形式に変換します。主な機能は以下の通りです：</p>
-<ul>
-<li>空白と改行の削除：テキストを詰めて表示します。行頭の空白や空の行も削除します。</li>
-<li>指定文字での改行：「、」「。」「」」などで自動的に改行を入れます。</li>
-<li>カスタム改行ルール：任意の文字で改行を入れられます。</li>
-<li>文字列の置換：特定の文字列を別の文字列に置き換えます。</li>
-<li>不要な文字列の削除：ヘッダーやフッターなど、不要な部分を削除します。</li>
-</ul>
-<p>使い方：変換したいテキストを入力し、必要なオプションを選択して「変換」ボタンをクリックしてください。結果は自動的にクリップボードにコピーされます。</p>
-</div>
-<div class="text-areas">
-<div class="text-area">
-<h2>変換前</h2>
-<textarea id="inputText"></textarea>
-</div>
-<div class="text-area">
-<h2>変換後</h2>
-<textarea id="outputText" readonly></textarea>
-</div>
-</div>
-<div>
-<button onclick="convertText()">変換</button>
-<button onclick="copyAll()">全てコピー</button>
-<button onclick="clearText()">クリア</button>
-</div>
-<div id="message"></div>
-<div class="options">
-<div class="checkbox-group">
-<label><input type="checkbox" id="removeSpaces" checked>空白と改行を削除</label>
-<label><input type="checkbox" id="breakAtComma">、で改行</label>
-<label><input type="checkbox" id="breakAtPeriod">。で改行</label>
-<label><input type="checkbox" id="breakAtQuote">」で改行</label>
-</div>
-<div class="rule-section">
-<h3>改行ルール</h3>
-<div class="rule-form">
-<input type="text" id="breakRuleInput" placeholder="改行する文字">
-<select id="breakRulePosition">
-<option value="after">後</option>
-<option value="before">前</option>
-</select>
-<button onclick="addRule('break')">追加</button>
-</div>
-<div id="breakRules" class="rule-list"></div>
-</div>
-<div class="rule-section">
-<h3>置換ルール</h3>
-<div class="rule-form">
-<input type="text" id="replaceFrom" placeholder="置換前">
-<input type="text" id="replaceTo" placeholder="置換後">
-<button onclick="addRule('replace')">追加</button>
-</div>
-<div id="replaceRules" class="rule-list"></div>
-</div>
-<div class="rule-section">
-<h3>削除ルール</h3>
-<div class="rule-form">
-<input type="text" id="deleteRuleInput" placeholder="削除する文字列">
-<button onclick="addRule('delete')">追加</button>
-</div>
-<div id="deleteRules" class="rule-list"></div>
-</div>
-</div>
-<div class="footer">
-<details class="update-history">
-<summary>更新履歴</summary>
-<ul>
-<li>2024/9/13 テキストクリア機能追加</li>
-<li>2024/9/11 公開</li>
-</ul>
-</details>
-<details class="author-info">
-<summary>作者情報</summary>
-<p>作者：しるべ(<a href="https://x.com/qxoiUioxp" target="_blank" rel="noopener noreferrer">https://x.com/qxoiUioxp</a>)</p>
-</details>
-</div>
+  <h1>ココフォリア用テキストコンバーター</h1>
+  <div class="description-toggle" onclick="toggleDescription()">説明を表示/非表示</div>
+  <div id="description" class="description-content">
+    <p>このツールは、ココフォリアで使用するテキストを効率的に整形するためのコンバーターです。テキストをココフォリアで使いやすい形式に変換します。主な機能は以下の通りです：</p>
+    <ul>
+      <li>空白と改行の削除：テキストを詰めて表示します。行頭の空白や空の行も削除します。</li>
+      <li>指定文字での改行：「、」「。」「」」などで自動的に改行を入れます。</li>
+      <li>カスタム改行ルール：任意の文字で改行を入れられます。</li>
+      <li>文字列の置換：特定の文字列を別の文字列に置き換えます。重複する置換パターンも正しく処理します。</li>
+      <li>不要な文字列の削除：ヘッダーやフッターなど、不要な部分を削除します。</li>
+      <li>特定の記号間の範囲を削除：指定した開始記号と終了記号の間のテキストを削除します。</li>
+      <li>英語の文字、カンマ、ピリオドの前後のスペースは保持されます。</li>
+      <li>ルールのインポート/エクスポート：設定したルールをJSONファイルとして保存し、後で読み込むことができます。</li>
+      <li>改行の行数を設定：各改行ルールに対して、挿入する改行の数を指定できます。</li>
+      <li>ルールの順序変更：各ルールタイプ内でドラッグ＆ドロップまたは▲▼ボタンによりルールの順序を変更できます。</li>
+    </ul>
+    <p>使い方：変換したいテキストを入力し、必要なオプションを選択してください。変換はリアルタイムで行われます。ルールの順序はドラッグ＆ドロップまたは▲▼ボタンで変更できます。</p>
+  </div>
+  <div class="text-areas">
+    <div class="text-area">
+      <h2>変換前</h2>
+      <textarea id="inputText"></textarea>
+    </div>
+    <div class="text-area">
+      <h2>変換後</h2>
+      <textarea id="outputText" readonly></textarea>
+    </div>
+  </div>
+  <div>
+    <button onclick="copyAll()">全てコピー</button>
+    <button onclick="clearText()">クリア</button>
+  </div>
+  <div id="message"></div>
+  <div class="options">
+    <div class="checkbox-group">
+      <label><input type="checkbox" id="removeSpaces" checked>空白と改行を削除</label>
+      <label><input type="checkbox" id="removeAlphabetSpaces">アルファベット間のスペースも削除する</label>
+    </div>
+    <div class="line-break-settings">
+      <label><input type="checkbox" id="breakAtComma">、で改行</label>
+      <label>行数: <input type="number" id="breakAtCommaLines" value="0" min="0"></label>
+    </div>
+    <div class="line-break-settings">
+      <label><input type="checkbox" id="breakAtPeriod">。で改行</label>
+      <label>行数: <input type="number" id="breakAtPeriodLines" value="0" min="0"></label>
+    </div>
+    <div class="line-break-settings">
+      <label><input type="checkbox" id="breakAtQuote">」で改行</label>
+      <label>行数: <input type="number" id="breakAtQuoteLines" value="0" min="0"></label>
+    </div>
+    <div class="rule-section">
+      <h3>改行ルール</h3>
+      <div class="rule-form">
+        <input type="text" id="breakRuleInput" placeholder="改行する文字">
+        <select id="breakRulePosition">
+          <option value="after">後</option>
+          <option value="before">前</option>
+        </select>
+        <input type="number" id="breakRuleLines" value="0" min="0" placeholder="行数">
+        <button onclick="addRule('break')">追加</button>
+      </div>
+      <div id="breakRules" class="rule-list"></div>
+    </div>
+    <div class="rule-section">
+      <h3>置換ルール</h3>
+      <div class="rule-form">
+        <input type="text" id="replaceFrom" placeholder="置換前">
+        <input type="text" id="replaceTo" placeholder="置換後">
+        <button onclick="addRule('replace')">追加</button>
+      </div>
+      <div id="replaceRules" class="rule-list"></div>
+    </div>
+    <div class="rule-section">
+      <h3>削除ルール</h3>
+      <div class="rule-form">
+        <input type="text" id="deleteRuleInput" placeholder="削除する文字列">
+        <button onclick="addRule('delete')">追加</button>
+      </div>
+      <div id="deleteRules" class="rule-list"></div>
+    </div>
+    <div class="rule-section">
+      <h3>範囲削除ルール</h3>
+      <div class="rule-form">
+        <input type="text" id="rangeDeleteStart" placeholder="開始記号">
+        <input type="text" id="rangeDeleteEnd" placeholder="終了記号">
+        <button onclick="addRule('rangeDelete')">追加</button>
+      </div>
+      <div id="rangeDeleteRules" class="rule-list"></div>
+    </div>
+  </div>
+  <div class="import-export">
+    <h3>ルールのインポート/エクスポート</h3>
+    <button onclick="exportRules()">ルールをエクスポート</button>
+    <input type="file" id="importFile" accept=".json" style="display: none;">
+    <button onclick="document.getElementById('importFile').click()">ルールをインポート</button>
+  </div>
+  <div class="footer">
+    <details class="update-history">
+      <summary>更新履歴</summary>
+      <ul>
+        <li>2024/10/16 リアルタイム変換、スペース処理の改善、範囲削除機能、ルールのインポート/エクスポート機能を追加。改行の行数設定、ドラッグ＆ドロップと▲▼ボタンによるルールの順序変更機能、置換ルールの処理改善実装</li>
+        <li>2024/9/13 テキストクリア機能追加</li>
+        <li>2024/9/11 公開</li>
+      </ul>
+    </details>
+    <details class="author-info">
+      <summary>作者情報</summary>
+      <p>作者：しるべ(<a href="https://x.com/qxoiUioxp" target="_blank" rel="noopener noreferrer">https://x.com/qxoiUioxp</a>)</p>
+    </details>
+  </div>
 </div>
 <script>
-let breakRules=[],replaceRules=[],deleteRules=[];function toggleDescription(){const e=document.getElementById("description");"none"===e.style.display?e.style.display="block":e.style.display="none"}function addRule(e){let t,l,n;switch(e){case"break":t=document.getElementById("breakRuleInput").value,l=document.getElementById("breakRulePosition").value,t&&breakRules.push({char:t,position:l}),n="breakRules";break;case"replace":t=document.getElementById("replaceFrom").value,l=document.getElementById("replaceTo").value,t&&l&&replaceRules.push({from:t,to:l}),n="replaceRules";break;case"delete":t=document.getElementById("deleteRuleInput").value,t&&deleteRules.push(t),n="deleteRules"}updateRuleList(e,n)}function updateRuleList(e,t){const l=document.getElementById(t);let n="";switch(e){case"break":n=breakRules.map(((e,t)=>`<div class="rule-item"><input type="text" value="${e.char}" onchange="updateRule('break', ${t}, 'char', this.value)"><select onchange="updateRule('break', ${t}, 'position', this.value)"><option value="after" ${e.position==="after"?"selected":""}>後</option><option value="before" ${e.position==="before"?"selected":""}>前</option></select><button class="delete-btn" onclick="removeRule('break', ${t})">削除</button></div>`)).join("");break;case"replace":n=replaceRules.map(((e,t)=>`<div class="rule-item"><input type="text" value="${e.from}" onchange="updateRule('replace', ${t}, 'from', this.value)"><span class="arrow">→</span><input type="text" value="${e.to}" onchange="updateRule('replace', ${t}, 'to', this.value)"><button class="delete-btn" onclick="removeRule('replace', ${t})">削除</button></div>`)).join("");break;case"delete":n=deleteRules.map(((e,t)=>`<div class="rule-item"><input type="text" value="${e}" onchange="updateRule('delete', ${t}, 'value', this.value)"><button class="delete-btn" onclick="removeRule('delete', ${t})">削除</button></div>`)).join("")}l.innerHTML=n}function removeRule(e,t){switch(e){case"break":breakRules.splice(t,1);break;case"replace":replaceRules.splice(t,1);break;case"delete":deleteRules.splice(t,1)}updateRuleList(e,e+"Rules")}function updateRule(e,t,l,n){switch(e){case"break":"char"===l?breakRules[t].char=n:breakRules[t].position=n;break;case"replace":replaceRules[t][l]=n;break;case"delete":deleteRules[t]=n}updateRuleList(e,e+"Rules")}function convertText(){let e=document.getElementById("inputText").value;const t=document.getElementById("removeSpaces").checked,l=document.getElementById("breakAtComma").checked,n=document.getElementById("breakAtPeriod").checked,a=document.getElementById("breakAtQuote").checked;if(t){e=e.replace(/^\s+|\s+$/gm,"");e=e.split("\n").filter(line=>line.trim()!=="").join("\n");e=e.replace(/\s+/g,"")}l&&(e=e.replace(/、/g,"、\n")),n&&(e=e.replace(/。/g,"。\n")),a&&(e=e.replace(/」/g,"」\n")),breakRules.forEach((t=>{"after"===t.position?e=e.replace(new RegExp(`${t.char}`,"g"),`${t.char}\n`):e=e.replace(new RegExp(`${t.char}`,"g"),`\n${t.char}`)})),replaceRules.forEach((t=>{e=e.replace(new RegExp(t.from,"g"),t.to)})),deleteRules.forEach((t=>{e=e.replace(new RegExp(t,"g"),"")})),document.getElementById("outputText").value=e,copyToClipboard(e)}function copyToClipboard(e){const t=document.createElement("textarea");t.value=e,document.body.appendChild(t),t.select(),document.execCommand("copy"),document.body.removeChild(t),showMessage("テキストがクリップボードにコピーされました")}function copyAll(){const e=document.getElementById("outputText").value;copyToClipboard(e)}function showMessage(e){const t=document.getElementById("message");t.textContent=e,setTimeout((()=>{t.textContent=""}),3e3)}function clearText(){document.getElementById("inputText").value="";document.getElementById("outputText").value="";showMessage("テキストがクリアされました")}
+// ルールを保存する配列
+let breakRules = [];
+let replaceRules = [];
+let deleteRules = [];
+let rangeDeleteRules = [];
+
+// 説明の表示/非表示を切り替える関数
+function toggleDescription() {
+  const description = document.getElementById("description");
+  description.style.display = description.style.display === "none" ? "block" : "none";
+}
+
+// ルールを追加する関数
+function addRule(type) {
+  let value, position, from, to, start, end, lines;
+  let listId;
+
+  switch (type) {
+    case 'break':
+      value = document.getElementById('breakRuleInput').value;
+      position = document.getElementById('breakRulePosition').value;
+      lines = parseInt(document.getElementById('breakRuleLines').value) || 0;
+      if (value) {
+        breakRules.push({ char: value, position: position, lines: lines });
+      }
+      listId = 'breakRules';
+      break;
+    case 'replace':
+      from = document.getElementById('replaceFrom').value;
+      to = document.getElementById('replaceTo').value;
+      if (from && to) {
+        replaceRules.push({ from: from, to: to });
+      }
+      listId = 'replaceRules';
+      break;
+    case 'delete':
+      value = document.getElementById('deleteRuleInput').value;
+      if (value) {
+        deleteRules.push(value);
+      }
+      listId = 'deleteRules';
+      break;
+    case 'rangeDelete':
+      start = document.getElementById('rangeDeleteStart').value;
+      end = document.getElementById('rangeDeleteEnd').value;
+      if (start && end) {
+        rangeDeleteRules.push({ start: start, end: end });
+      }
+      listId = 'rangeDeleteRules';
+      break;
+  }
+
+  updateRuleList(type, listId);
+  convertText();
+}
+
+// ルールリストを更新する関数
+function updateRuleList(type, listId) {
+  const list = document.getElementById(listId);
+  let html = '';
+
+  switch (type) {
+    case 'break':
+      html = breakRules.map((rule, index) => `
+        <div class="rule-item" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" ondrop="drop(event)"   data-index="${index}">
+          <input type="text" value="${rule.char}" onchange="updateRule('break', ${index}, 'char', this.value)">
+          <select onchange="updateRule('break', ${index}, 'position', this.value)">
+            <option value="after" ${rule.position === 'after' ? 'selected' : ''}>後</option>
+            <option value="before" ${rule.position === 'before' ? 'selected' : ''}>前</option>
+          </select>
+          <input type="number" value="${rule.lines}" min="0" onchange="updateRule('break', ${index}, 'lines', this.value)">
+          <button class="delete-btn" onclick="removeRule('break', ${index})">削除</button>
+          <span class="move-btn" onclick="moveRule('break', ${index}, -1)">▲</span>
+          <span class="move-btn" onclick="moveRule('break', ${index}, 1)">▼</span>
+        </div>
+      `).join('');
+      break;
+    case 'replace':
+      html = replaceRules.map((rule, index) => `
+        <div class="rule-item" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" ondrop="drop(event)" data-index="${index}">
+          <input type="text" value="${rule.from}" onchange="updateRule('replace', ${index}, 'from', this.value)">
+          <span class="arrow">→</span>
+          <input type="text" value="${rule.to}" onchange="updateRule('replace', ${index}, 'to', this.value)">
+          <button class="delete-btn" onclick="removeRule('replace', ${index})">削除</button>
+          <span class="move-btn" onclick="moveRule('replace', ${index}, -1)">▲</span>
+          <span class="move-btn" onclick="moveRule('replace', ${index}, 1)">▼</span>
+        </div>
+      `).join('');
+      break;
+    case 'delete':
+      html = deleteRules.map((rule, index) => `
+        <div class="rule-item" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" ondrop="drop(event)" data-index="${index}">
+          <input type="text" value="${rule}" onchange="updateRule('delete', ${index}, 'value', this.value)">
+          <button class="delete-btn" onclick="removeRule('delete', ${index})">削除</button>
+          <span class="move-btn" onclick="moveRule('delete', ${index}, -1)">▲</span>
+          <span class="move-btn" onclick="moveRule('delete', ${index}, 1)">▼</span>
+        </div>
+      `).join('');
+      break;
+    case 'rangeDelete':
+      html = rangeDeleteRules.map((rule, index) => `
+        <div class="rule-item" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" ondrop="drop(event)" data-index="${index}">
+          <input type="text" value="${rule.start}" onchange="updateRule('rangeDelete', ${index}, 'start', this.value)">
+          <span class="arrow">～</span>
+          <input type="text" value="${rule.end}" onchange="updateRule('rangeDelete', ${index}, 'end', this.value)">
+          <button class="delete-btn" onclick="removeRule('rangeDelete', ${index})">削除</button>
+          <span class="move-btn" onclick="moveRule('rangeDelete', ${index}, -1)">▲</span>
+          <span class="move-btn" onclick="moveRule('rangeDelete', ${index}, 1)">▼</span>
+        </div>
+      `).join('');
+      break;
+  }
+
+  list.innerHTML = html;
+}
+
+// ドラッグ開始時の処理
+function drag(event) {
+  event.dataTransfer.setData("text", event.target.dataset.index);
+  event.target.classList.add('dragging');
+}
+
+// ドロップ可能な場所の設定
+function allowDrop(event) {
+  event.preventDefault();
+}
+
+// ドロップ時の処理
+function drop(event) {
+  event.preventDefault();
+  const fromIndex = parseInt(event.dataTransfer.getData("text"));
+  const toIndex = parseInt(event.target.closest('.rule-item').dataset.index);
+  const type = event.target.closest('.rule-list').id.replace('Rules', '');
+  
+  if (fromIndex !== toIndex) {
+    let rules;
+    switch (type) {
+      case 'break':
+        rules = breakRules;
+        break;
+      case 'replace':
+        rules = replaceRules;
+        break;
+      case 'delete':
+        rules = deleteRules;
+        break;
+      case 'rangeDelete':
+        rules = rangeDeleteRules;
+        break;
+    }
+    
+    const [removed] = rules.splice(fromIndex, 1);
+    rules.splice(toIndex, 0, removed);
+    
+    updateRuleList(type, type + 'Rules');
+    convertText();
+  }
+  
+  event.target.closest('.rule-item').classList.remove('dragging');
+}
+
+// ルールを削除する関数
+function removeRule(type, index) {
+  switch (type) {
+    case 'break':
+      breakRules.splice(index, 1);
+      break;
+    case 'replace':
+      replaceRules.splice(index, 1);
+      break;
+    case 'delete':
+      deleteRules.splice(index, 1);
+      break;
+    case 'rangeDelete':
+      rangeDeleteRules.splice(index, 1);
+      break;
+  }
+  updateRuleList(type, type + 'Rules');
+  convertText();
+}
+
+// ルールを更新する関数
+function updateRule(type, index, field, value) {
+  switch (type) {
+    case 'break':
+      if (field === 'char') {
+        breakRules[index].char = value;
+      } else if (field === 'position') {
+        breakRules[index].position = value;
+      } else if (field === 'lines') {
+        breakRules[index].lines = parseInt(value) || 0;
+      }
+      break;
+    case 'replace':
+      replaceRules[index][field] = value;
+      break;
+    case 'delete':
+      deleteRules[index] = value;
+      break;
+    case 'rangeDelete':
+      rangeDeleteRules[index][field] = value;
+      break;
+  }
+  updateRuleList(type, type + 'Rules');
+  convertText();
+}
+
+// ルールを移動する関数
+function moveRule(type, index, direction) {
+  let rules;
+  switch (type) {
+    case 'break':
+      rules = breakRules;
+      break;
+    case 'replace':
+      rules = replaceRules;
+      break;
+    case 'delete':
+      rules = deleteRules;
+      break;
+    case 'rangeDelete':
+      rules = rangeDeleteRules;
+      break;
+  }
+
+  const newIndex = index + direction;
+  if (newIndex >= 0 && newIndex < rules.length) {
+    const temp = rules[index];
+    rules[index] = rules[newIndex];
+    rules[newIndex] = temp;
+    updateRuleList(type, type + 'Rules');
+    convertText();
+  }
+}
+
+// テキストを変換する関数
+function convertText() {
+  let text = document.getElementById('inputText').value;
+  const removeSpaces = document.getElementById('removeSpaces').checked;
+  const breakAtComma = document.getElementById('breakAtComma').checked;
+  const breakAtPeriod = document.getElementById('breakAtPeriod').checked;
+  const breakAtQuote = document.getElementById('breakAtQuote').checked;
+  const removeAlphabetSpaces = document.getElementById('removeAlphabetSpaces').checked;
+  const breakAtCommaLines = parseInt(document.getElementById('breakAtCommaLines').value) || 0;
+  const breakAtPeriodLines = parseInt(document.getElementById('breakAtPeriodLines').value) || 0;
+  const breakAtQuoteLines = parseInt(document.getElementById('breakAtQuoteLines').value) || 0;
+
+  // スペースを削除する処理（最初に適用）
+  if (removeSpaces) {
+    if (removeAlphabetSpaces) {
+      // アルファベット間のスペースも削除
+      text = text.replace(/\s+/g, '');
+    } else {
+      // 既存の処理（アルファベット間のスペースは保持）
+      text = removeSpacesFromText(text);
+    }
+  }
+
+  // 範囲削除ルールの適用
+  rangeDeleteRules.forEach(rule => {
+    const regex = new RegExp(`${escapeRegExp(rule.start)}[\\s\\S]*?${escapeRegExp(rule.end)}`, 'g');
+    text = text.replace(regex, '');
+  });
+
+  // 改行ルールの適用
+  breakRules.forEach(rule => {
+    const regex = new RegExp(`${escapeRegExp(rule.char)}`, 'g');
+    const lineBreaks = '\n'.repeat(rule.lines + 1);
+    if (rule.position === 'after') {
+      text = text.replace(regex, `${rule.char}${lineBreaks}`);
+    } else {
+      text = text.replace(regex, `${lineBreaks}${rule.char}`);
+    }
+  });
+
+  // 置換ルールの適用（更新された処理）
+  if (replaceRules.length > 0) {
+    // ルールを文字列の長さでソート（長い文字列から先に処理）
+    const sortedReplaceRules = replaceRules.slice().sort((a, b) => b.from.length - a.from.length);
+    
+    // 全ての置換パターンを含む正規表現を作成
+    const pattern = sortedReplaceRules.map(rule => escapeRegExp(rule.from)).join('|');
+    const regex = new RegExp(pattern, 'g');
+
+    // 一度に全ての置換を行う
+    text = text.replace(regex, match => {
+      const rule = sortedReplaceRules.find(r => r.from === match);
+      return rule ? rule.to : match;
+    });
+  }
+
+  // 削除ルールの適用
+  deleteRules.forEach(rule => {
+    const regex = new RegExp(escapeRegExp(rule), 'g');
+    text = text.replace(regex, '');
+  });
+
+  // 「、」「。」「」」での改行
+  if (breakAtComma) {
+    text = text.replace(/、/g, `、${'\n'.repeat(breakAtCommaLines + 1)}`);
+  }
+  if (breakAtPeriod) {
+    text = text.replace(/。/g, `。${'\n'.repeat(breakAtPeriodLines + 1)}`);
+  }
+  if (breakAtQuote) {
+    text = text.replace(/」/g, `」${'\n'.repeat(breakAtQuoteLines + 1)}`);
+  }
+
+  // エスケープされた改行文字を実際の改行に変換
+  text = text.replace(/\\n/g, '\n');
+
+  document.getElementById('outputText').value = text;
+}
+
+// 正規表現のメタ文字をエスケープする関数
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\');
+}
+
+// スペースを削除する関数
+function removeSpacesFromText(text) {
+  return text.replace(/(?<![.,a-zA-Z])\s+(?![.,a-zA-Z])/g, '');
+}
+
+// クリップボードにコピーする関数
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    showMessage('テキストがクリップボードにコピーされました');
+  }).catch(err => {
+    console.error('クリップボードへのコピーに失敗しました', err);
+  });
+}
+
+// 全てのテキストをコピーする関数
+function copyAll() {
+  const text = document.getElementById('outputText').value;
+  copyToClipboard(text);
+}
+
+// メッセージを表示する関数
+function showMessage(message) {
+  const messageElement = document.getElementById('message');
+  messageElement.textContent = message;
+  setTimeout(() => {
+    messageElement.textContent = '';
+  }, 3000);
+}
+
+// テキストをクリアする関数
+function clearText() {
+  document.getElementById('inputText').value = '';
+  document.getElementById('outputText').value = '';
+  showMessage('テキストがクリアされました');
+}
+
+// ルールをエクスポートする関数
+function exportRules() {
+  const rules = {
+    breakRules,
+    replaceRules,
+    deleteRules,
+    rangeDeleteRules,
+    checkboxStates: {
+      removeSpaces: document.getElementById('removeSpaces').checked,
+      breakAtComma: document.getElementById('breakAtComma').checked,
+      breakAtPeriod: document.getElementById('breakAtPeriod').checked,
+      breakAtQuote: document.getElementById('breakAtQuote').checked,
+      removeAlphabetSpaces: document.getElementById('removeAlphabetSpaces').checked
+    },
+    lineBreakSettings: {
+      breakAtCommaLines: parseInt(document.getElementById('breakAtCommaLines').value) || 0,
+      breakAtPeriodLines: parseInt(document.getElementById('breakAtPeriodLines').value) || 0,
+      breakAtQuoteLines: parseInt(document.getElementById('breakAtQuoteLines').value) || 0
+    }
+  };
+  const jsonString = JSON.stringify(rules, null, 2);
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'text_converter_rules.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ルールをインポートする関数
+function importRules(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const rules = JSON.parse(e.target.result);
+        breakRules = rules.breakRules || [];
+        replaceRules = rules.replaceRules || [];
+        deleteRules = rules.deleteRules || [];
+        rangeDeleteRules = rules.rangeDeleteRules || [];
+        if (rules.checkboxStates) {
+          document.getElementById('removeSpaces').checked = rules.checkboxStates.removeSpaces;
+          document.getElementById('breakAtComma').checked = rules.checkboxStates.breakAtComma;
+          document.getElementById('breakAtPeriod').checked = rules.checkboxStates.breakAtPeriod;
+          document.getElementById('breakAtQuote').checked = rules.checkboxStates.breakAtQuote;
+          document.getElementById('removeAlphabetSpaces').checked = rules.checkboxStates.removeAlphabetSpaces || false;
+        }
+        if (rules.lineBreakSettings) {
+          document.getElementById('breakAtCommaLines').value = rules.lineBreakSettings.breakAtCommaLines || 0;
+          document.getElementById('breakAtPeriodLines').value = rules.lineBreakSettings.breakAtPeriodLines || 0;
+          document.getElementById('breakAtQuoteLines').value = rules.lineBreakSettings.breakAtQuoteLines || 0;
+        }
+        updateRuleList('break', 'breakRules');
+        updateRuleList('replace', 'replaceRules');
+        updateRuleList('delete', 'deleteRules');
+        updateRuleList('rangeDelete', 'rangeDeleteRules');
+        convertText();
+        showMessage('ルールが正常にインポートされました');
+      } catch (error) {
+        console.error('ルールのインポートに失敗しました', error);
+        showMessage('ルールのインポートに失敗しました: ' + error.message);
+      }
+    };
+    reader.onerror = function(error) {
+      console.error('ファイルの読み込みに失敗しました', error);
+      showMessage('ファイルの読み込みに失敗しました');
+    };
+    reader.readAsText(file);
+  }
+}
+
+// 入力テキストが変更されたときにリアルタイムで変換を行う
+document.getElementById('inputText').addEventListener('input', convertText);
+
+// チェックボックスの状態が変更されたときにリアルタイム変換を行う
+document.querySelectorAll('input[type="checkbox"], input[type="number"]').forEach(input => {
+  input.addEventListener('change', convertText);
+});
+
+// ファイルが選択されたときにインポートを実行
+document.getElementById('importFile').addEventListener('change', importRules);
 </script>
 </body>
 </html>
