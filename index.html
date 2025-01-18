@@ -38,10 +38,44 @@ body {
   background-color: #f8f9fa;
   border-radius: 5px;
 }
+.tabs {
+  margin-top: 20px;
+}
+.tab-buttons {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.tab-button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  background: #f8f9fa;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #333;
+}
+.tab-button.active {
+  background: white;
+  border-bottom: 2px solid #007bff;
+  font-weight: bold;
+  color: black;
+}
+.tab-icon {
+  font-size: 1.2em;
+}
+.tab-content {
+  border: 1px solid #ddd;
+  padding: 20px;
+  border-radius: 0 4px 4px 4px;
+}
 .text-areas {
   display: flex;
   justify-content: space-between;
-  margin-top: 20px;
+  gap: 20px;
 }
 .text-area {
   width: 48%;
@@ -50,6 +84,33 @@ textarea {
   width: 100%;
   height: 200px;
   margin-bottom: 10px;
+  font-family: monospace;
+}
+.file-import {
+  margin-bottom: 20px;
+}
+.file-list {
+  margin: 10px 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px;
+  border: 1px solid #ddd;
+  margin-bottom: 5px;
+  border-radius: 3px;
+}
+.file-item-name {
+  flex-grow: 1;
+}
+.file-item button {
+  margin-left: 10px;
+}
+#outputText {
+  background-color: #f5f5f5;
 }
 button {
   background-color: #007bff;
@@ -58,6 +119,9 @@ button {
   padding: 5px 10px;
   cursor: pointer;
   margin-right: 5px;
+}
+#clearButton {
+  background-color: #dc3545;
 }
 #message {
   margin-top: 10px;
@@ -160,19 +224,39 @@ button {
     </ul>
     <p>使い方：変換したいテキストを入力し、必要なオプションを選択してください。変換はリアルタイムで行われます。ルールの順序はドラッグ＆ドロップまたは▲▼ボタンで変更できます。</p>
   </div>
-  <div class="text-areas">
-    <div class="text-area">
-      <h2>変換前</h2>
-      <textarea id="inputText"></textarea>
+  <div class="tabs">
+    <div class="tab-buttons">
+      <button class="tab-button active" onclick="switchTab('single')"><span class="tab-icon">✏️</span>テキストエディタ</button>
+      <button class="tab-button" onclick="switchTab('batch')"><span class="tab-icon">📁</span>ファイル変換</button>
     </div>
-    <div class="text-area">
-      <h2>変換後</h2>
-      <textarea id="outputText" readonly></textarea>
+    <div class="tab-content">
+      <div id="single-tab">
+        <div class="text-areas">
+          <div class="text-area">
+            <h2>変換前</h2>
+            <textarea id="inputText"></textarea>
+          </div>
+          <div class="text-area">
+            <h2>変換後</h2>
+            <textarea id="outputText" readonly></textarea>
+          </div>
+        </div>
+        <div>
+          <button onclick="copyAll()">全てコピー</button>
+          <button onclick="clearText()" id="clearButton">クリア</button>
+        </div>
+      </div>
+      <div id="batch-tab" style="display: none;">
+        <div class="file-import">
+          <input type="file" id="batchFiles" accept=".txt" multiple style="display: none;">
+          <button onclick="document.getElementById('batchFiles').click()">テキストファイルを選択</button>
+          <button onclick="convertAllFiles()">一括変換</button>
+          <button onclick="downloadAll()">全てダウンロード</button>
+        </div>
+        <div id="fileList" class="file-list">
+        </div>
+      </div>
     </div>
-  </div>
-  <div>
-    <button onclick="copyAll()">全てコピー</button>
-    <button onclick="clearText()">クリア</button>
   </div>
   <div id="message"></div>
   <div class="options">
@@ -242,6 +326,7 @@ button {
     <details class="update-history">
       <summary>更新履歴</summary>
       <ul>
+        <li>2025/01/18 タブUIの追加（テキストエディタ/ファイル変換）、複数ファイルの一括変換機能、設定の自動保存機能を追加</li>
         <li>2024/10/16 リアルタイム変換、スペース処理の改善、範囲削除機能、ルールのインポート/エクスポート機能を追加。改行の行数設定、ドラッグ＆ドロップと▲▼ボタンによるルールの順序変更機能、置換ルールの処理改善実装</li>
         <li>2024/9/13 テキストクリア機能追加</li>
         <li>2024/9/11 公開</li>
@@ -253,12 +338,79 @@ button {
     </details>
   </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 // ルールを保存する配列
 let breakRules = [];
 let replaceRules = [];
 let deleteRules = [];
 let rangeDeleteRules = [];
+
+// LocalStorageに設定を保存する関数
+function saveSettings() {
+  const settings = {
+    breakRules,
+    replaceRules,
+    deleteRules,
+    rangeDeleteRules,
+    checkboxStates: {
+      removeSpaces: document.getElementById('removeSpaces').checked,
+      breakAtComma: document.getElementById('breakAtComma').checked,
+      breakAtPeriod: document.getElementById('breakAtPeriod').checked,
+      breakAtQuote: document.getElementById('breakAtQuote').checked,
+      removeAlphabetSpaces: document.getElementById('removeAlphabetSpaces').checked
+    },
+    lineBreakSettings: {
+      breakAtCommaLines: parseInt(document.getElementById('breakAtCommaLines').value) || 0,
+      breakAtPeriodLines: parseInt(document.getElementById('breakAtPeriodLines').value) || 0,
+      breakAtQuoteLines: parseInt(document.getElementById('breakAtQuoteLines').value) || 0
+    }
+  };
+  localStorage.setItem('textConverterSettings', JSON.stringify(settings));
+}
+
+// LocalStorageから設定を読み込む関数
+function loadSettings() {
+  const savedSettings = localStorage.getItem('textConverterSettings');
+  if (savedSettings) {
+    try {
+      const settings = JSON.parse(savedSettings);
+      
+      // ルールの復元
+      breakRules = settings.breakRules || [];
+      replaceRules = settings.replaceRules || [];
+      deleteRules = settings.deleteRules || [];
+      rangeDeleteRules = settings.rangeDeleteRules || [];
+
+      // チェックボックスの状態を復元
+      if (settings.checkboxStates) {
+        document.getElementById('removeSpaces').checked = settings.checkboxStates.removeSpaces;
+        document.getElementById('breakAtComma').checked = settings.checkboxStates.breakAtComma;
+        document.getElementById('breakAtPeriod').checked = settings.checkboxStates.breakAtPeriod;
+        document.getElementById('breakAtQuote').checked = settings.checkboxStates.breakAtQuote;
+        document.getElementById('removeAlphabetSpaces').checked = settings.checkboxStates.removeAlphabetSpaces;
+      }
+
+      // 改行設定の復元
+      if (settings.lineBreakSettings) {
+        document.getElementById('breakAtCommaLines').value = settings.lineBreakSettings.breakAtCommaLines;
+        document.getElementById('breakAtPeriodLines').value = settings.lineBreakSettings.breakAtPeriodLines;
+        document.getElementById('breakAtQuoteLines').value = settings.lineBreakSettings.breakAtQuoteLines;
+      }
+
+      // ルールリストの更新
+      updateRuleList('break', 'breakRules');
+      updateRuleList('replace', 'replaceRules');
+      updateRuleList('delete', 'deleteRules');
+      updateRuleList('rangeDelete', 'rangeDeleteRules');
+    } catch (error) {
+      console.error('設定の読み込みに失敗しました:', error);
+    }
+  }
+}
+
+// ページ読み込み時に設定を復元
+document.addEventListener('DOMContentLoaded', loadSettings);
 
 // 説明の表示/非表示を切り替える関数
 function toggleDescription() {
@@ -308,6 +460,7 @@ function addRule(type) {
 
   updateRuleList(type, listId);
   convertText();
+  saveSettings();
 }
 
 // ルールリストを更新する関数
@@ -318,7 +471,7 @@ function updateRuleList(type, listId) {
   switch (type) {
     case 'break':
       html = breakRules.map((rule, index) => `
-        <div class="rule-item" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" ondrop="drop(event)"   data-index="${index}">
+        <div class="rule-item" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" ondrop="drop(event)" data-index="${index}">
           <input type="text" value="${rule.char}" onchange="updateRule('break', ${index}, 'char', this.value)">
           <select onchange="updateRule('break', ${index}, 'position', this.value)">
             <option value="after" ${rule.position === 'after' ? 'selected' : ''}>後</option>
@@ -433,6 +586,7 @@ function removeRule(type, index) {
   }
   updateRuleList(type, type + 'Rules');
   convertText();
+  saveSettings();
 }
 
 // ルールを更新する関数
@@ -459,6 +613,7 @@ function updateRule(type, index, field, value) {
   }
   updateRuleList(type, type + 'Rules');
   convertText();
+  saveSettings();
 }
 
 // ルールを移動する関数
@@ -490,7 +645,7 @@ function moveRule(type, index, direction) {
 }
 
 // テキストを変換する関数
-function convertText() {
+function convertText(skipHistory = false) {
   let text = document.getElementById('inputText').value;
   const removeSpaces = document.getElementById('removeSpaces').checked;
   const breakAtComma = document.getElementById('breakAtComma').checked;
@@ -501,14 +656,14 @@ function convertText() {
   const breakAtPeriodLines = parseInt(document.getElementById('breakAtPeriodLines').value) || 0;
   const breakAtQuoteLines = parseInt(document.getElementById('breakAtQuoteLines').value) || 0;
 
-  // スペースを削除する処理（最初に適用）
+  // スペースと改行の処理
   if (removeSpaces) {
+    // アルファベット間のスペースの処理
     if (removeAlphabetSpaces) {
-      // アルファベット間のスペースも削除
       text = text.replace(/\s+/g, '');
     } else {
-      // 既存の処理（アルファベット間のスペースは保持）
-      text = removeSpacesFromText(text);
+      // 英数字の前後のスペースは保持
+      text = text.replace(/(?<![a-zA-Z0-9])\s+|\s+(?![a-zA-Z0-9])/g, '');
     }
   }
 
@@ -551,21 +706,26 @@ function convertText() {
     text = text.replace(regex, '');
   });
 
-  // 「、」「。」「」」での改行
+  // 改行処理
   if (breakAtComma) {
     text = text.replace(/、/g, `、${'\n'.repeat(breakAtCommaLines + 1)}`);
   }
-  if (breakAtPeriod) {
-    text = text.replace(/。/g, `。${'\n'.repeat(breakAtPeriodLines + 1)}`);
-  }
-  if (breakAtQuote) {
-    text = text.replace(/」/g, `」${'\n'.repeat(breakAtQuoteLines + 1)}`);
+  if (breakAtPeriod || breakAtQuote) {
+    if (breakAtPeriod) {
+      text = text.replace(/。(?!」)/g, `。${'\n'.repeat(breakAtPeriodLines + 1)}`);
+    }
+    if (breakAtQuote) {
+      text = text.replace(/」(?!。)/g, `」${'\n'.repeat(breakAtQuoteLines + 1)}`);
+    }
+    // 「。」」の連続はそのまま残す
+    text = text.replace(/。」/g, '。」');
   }
 
   // エスケープされた改行文字を実際の改行に変換
   text = text.replace(/\\n/g, '\n');
 
   document.getElementById('outputText').value = text;
+  
 }
 
 // 正規表現のメタ文字をエスケープする関数
@@ -689,8 +849,138 @@ document.getElementById('inputText').addEventListener('input', convertText);
 
 // チェックボックスの状態が変更されたときにリアルタイム変換を行う
 document.querySelectorAll('input[type="checkbox"], input[type="number"]').forEach(input => {
-  input.addEventListener('change', convertText);
+  input.addEventListener('change', () => {
+    convertText();
+    saveSettings();
+  });
 });
+
+// タブを切り替える関数
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+  
+  document.getElementById('single-tab').style.display = tabName === 'single' ? 'block' : 'none';
+  document.getElementById('batch-tab').style.display = tabName === 'batch' ? 'block' : 'none';
+}
+
+// ファイルをリストに追加する関数
+function addFileToList(file) {
+  const fileDiv = document.createElement('div');
+  fileDiv.className = 'file-item';
+  fileDiv.innerHTML = `
+    <span class="file-item-name">${file.name}</span>
+    <button onclick="previewFile(this)">プレビュー</button>
+    <button onclick="this.parentElement.remove()">削除</button>
+  `;
+  document.getElementById('fileList').appendChild(fileDiv);
+}
+
+// テキストファイルを読み込む関数
+document.getElementById('batchFiles').addEventListener('change', function(event) {
+  const files = event.target.files;
+  for (let file of files) {
+    addFileToList(file);
+  }
+});
+
+// ファイルをプレビューする関数
+function previewFile(button) {
+  switchTab('single');
+  const fileName = button.previousElementSibling.textContent;
+  const fileInput = document.getElementById('batchFiles');
+  const file = Array.from(fileInput.files).find(f => f.name === fileName);
+  
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('inputText').value = e.target.result;
+      convertText();
+    };
+    reader.readAsText(file);
+  }
+}
+
+// 全てのファイルを変換する関数
+function convertAllFiles() {
+  const fileInput = document.getElementById('batchFiles');
+  const files = fileInput.files;
+  if (files.length === 0) {
+    showMessage('変換するファイルがありません');
+    return;
+  }
+
+  let processed = 0;
+  let total = files.length;
+  showMessage(`変換を開始します (0/${total})`);
+
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const text = e.target.result;
+      document.getElementById('inputText').value = text;
+      convertText();
+      const convertedText = document.getElementById('outputText').value;
+      const blob = new Blob([convertedText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `converted_${file.name}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      processed++;
+      showMessage(`変換中... (${processed}/${total})`);
+      if (processed === total) {
+        showMessage('全てのファイルを変換しました');
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+// 全ての変換済みテキストをダウンロードする関数
+function downloadAll() {
+  const fileInput = document.getElementById('batchFiles');
+  const files = fileInput.files;
+  if (files.length === 0) {
+    showMessage('ダウンロードするファイルがありません');
+    return;
+  }
+
+  let processed = 0;
+  let zip = new JSZip();
+
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const text = e.target.result;
+      document.getElementById('inputText').value = text;
+      convertText();
+      const convertedText = document.getElementById('outputText').value;
+      zip.file(`converted_${file.name}`, convertedText);
+      
+      processed++;
+      if (processed === files.length) {
+        zip.generateAsync({type:"blob"}).then(function(content) {
+          const url = URL.createObjectURL(content);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'converted_files.zip';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+      }
+    };
+    reader.readAsText(file);
+  });
+}
 
 // ファイルが選択されたときにインポートを実行
 document.getElementById('importFile').addEventListener('change', importRules);
