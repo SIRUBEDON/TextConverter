@@ -14,17 +14,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ココフォリア用テキストコンバーター</title>
 <style>
+:root {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --container-border: #ddd;
+  --container-bg: #ffffff;
+  --button-bg: #007bff;
+  --button-text: white;
+  --description-bg: #f8f9fa;
+  --rule-item-bg: #f8f9fa;
+  --output-bg: #f5f5f5;
+  --clear-button-bg: #dc3545;
+}
+
+[data-theme="dark"] {
+  --bg-color: #1e1e1e;
+  --text-color: #ffffff;
+  --container-border: #404040;
+  --container-bg: #2d2d2d;
+  --button-bg: #0056b3;
+  --button-text: white;
+  --description-bg: #363636;
+  --rule-item-bg: #363636;
+  --output-bg: #404040;
+  --clear-button-bg: #bd2130;
+}
+
 body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 20px;
   max-width: 800px;
   margin: auto;
+  background-color: var(--bg-color);
+  color: var(--text-color);
 }
 .container {
-  border: 1px solid #ddd;
+  border: 1px solid var(--container-border);
   padding: 20px;
   border-radius: 5px;
+  background-color: var(--container-bg);
 }
 .description-toggle {
   cursor: pointer;
@@ -35,7 +64,7 @@ body {
   display: none;
   margin-top: 10px;
   padding: 10px;
-  background-color: #f8f9fa;
+  background-color: var(--description-bg);
   border-radius: 5px;
 }
 .tabs {
@@ -48,15 +77,15 @@ body {
 }
 .tab-button {
   padding: 8px 16px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--container-border);
   border-bottom: none;
   border-radius: 4px 4px 0 0;
-  background: #f8f9fa;
+  background: var(--description-bg);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #333;
+  color: var(--text-color);
 }
 .tab-button.active {
   background: white;
@@ -68,7 +97,7 @@ body {
   font-size: 1.2em;
 }
 .tab-content {
-  border: 1px solid #ddd;
+  border: 1px solid var(--container-border);
   padding: 20px;
   border-radius: 0 4px 4px 4px;
 }
@@ -99,7 +128,7 @@ textarea {
   align-items: center;
   justify-content: space-between;
   padding: 5px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--container-border);
   margin-bottom: 5px;
   border-radius: 3px;
 }
@@ -110,18 +139,19 @@ textarea {
   margin-left: 10px;
 }
 #outputText {
-  background-color: #f5f5f5;
+  background-color: var(--output-bg);
+  color: var(--text-color);
 }
 button {
-  background-color: #007bff;
-  color: white;
+  background-color: var(--button-bg);
+  color: var(--button-text);
   border: none;
   padding: 5px 10px;
   cursor: pointer;
   margin-right: 5px;
 }
 #clearButton {
-  background-color: #dc3545;
+  background-color: var(--clear-button-bg);
 }
 #message {
   margin-top: 10px;
@@ -150,10 +180,32 @@ button {
   display: flex;
   align-items: center;
   margin-bottom: 5px;
-  background-color: #f8f9fa;
+  background-color: var(--rule-item-bg);
   padding: 5px;
   border-radius: 3px;
   cursor: move;
+}
+
+/* ダークモードスイッチのスタイル */
+.theme-switch {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-switch input {
+  display: none;
+}
+
+.theme-switch label {
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 15px;
+  background-color: var(--button-bg);
+  color: var(--button-text);
 }
 .rule-item input, .rule-item select {
   margin-right: 5px;
@@ -204,7 +256,11 @@ button {
 }
 </style>
 </head>
-<body>
+<body data-theme="light">
+<div class="theme-switch">
+  <input type="checkbox" id="themeSwitch">
+  <label for="themeSwitch">🌙 ダークモード</label>
+</div>
 <div class="container">
   <h1>ココフォリア用テキストコンバーター</h1>
   <div class="description-toggle" onclick="toggleDescription()">説明を表示/非表示</div>
@@ -340,6 +396,31 @@ button {
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
+// テーマの切り替え機能
+function initTheme() {
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  document.body.dataset.theme = savedTheme;
+  document.getElementById('themeSwitch').checked = savedTheme === 'dark';
+}
+
+document.getElementById('themeSwitch').addEventListener('change', function(e) {
+  const theme = e.target.checked ? 'dark' : 'light';
+  document.body.dataset.theme = theme;
+  localStorage.setItem('theme', theme);
+  
+  // ラベルのテキストを更新
+  const label = this.nextElementSibling;
+  label.textContent = theme === 'dark' ? '☀️ ライトモード' : '🌙 ダークモード';
+});
+
+// ページ読み込み時にテーマを初期化
+document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+  const themeSwitch = document.getElementById('themeSwitch');
+  const label = themeSwitch.nextElementSibling;
+  label.textContent = themeSwitch.checked ? '☀️ ライトモード' : '🌙 ダークモード';
+});
+
 // ルールを保存する配列
 let breakRules = [];
 let replaceRules = [];
